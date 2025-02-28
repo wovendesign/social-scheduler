@@ -4,6 +4,7 @@ import { runJobs } from 'node_modules/payload/dist/queues/operations/runJobs/ind
 
 import { Accounts } from './collections/Accounts.js'
 import { MastodonApps } from './collections/MastodonApps.js'
+import { Posts } from './collections/Posts.js'
 import { settings } from './globals/Settings.js'
 
 export type SocialSchedulerConfig = {
@@ -27,70 +28,7 @@ export const socialScheduler =
 			config.globals.push(settings)
 		}
 
-		config.collections = [...config.collections, MastodonApps, Accounts]
-
-		config.collections.push({
-			slug: 'plugin-collection',
-			admin: {
-				components: {
-					beforeList: ['social-scheduler/rsc#BeforeDashboardServer'],
-					edit: {
-						PublishButton: 'social-scheduler/client#ScheduleButton',
-					},
-				},
-			},
-			endpoints: [
-				{
-					handler: async (req) => {
-						const id = req.query.id as string
-						const payload = req.payload
-						payload.logger.info('Adding job to queue')
-
-						// get date from request body
-						if (!req.json) {
-							return new Response('Missing date in request body', { status: 400 })
-						}
-						const body = await req.json()
-						const date = new Date(body.date)
-
-						payload.logger.info(`Date: ${date.toDateString()}`)
-
-						const nextMinute = new Date(Date.now() + 1000 * 5)
-
-						await payload.jobs
-							.queue({
-								input: {
-									id: 'IDDD',
-								},
-								queue: 'social-scheduler',
-								task: 'createPost',
-								waitUntil: nextMinute,
-							})
-							.then((job) => {
-								payload.logger.info('Job added to queue')
-							})
-							.catch((error) => {
-								payload.logger.error('Error adding job to queue', error)
-							})
-						// await payload.jobs.run({ queue: 'social-scheduler' })
-						return new Response('Hello from custom endpoint')
-					},
-					method: 'post',
-					path: '/:id/schedule',
-				},
-			],
-			fields: [
-				{
-					name: 'id',
-					type: 'text',
-				},
-			],
-			versions: {
-				drafts: {
-					schedulePublish: true,
-				},
-			},
-		})
+		config.collections = [...config.collections, MastodonApps, Accounts, Posts]
 
 		config.jobs?.tasks.push({
 			// Configure this task to automatically retry
@@ -138,24 +76,6 @@ export const socialScheduler =
 			queue: 'social-scheduler', // name of the queue
 		})
 
-		if (pluginOptions.collections) {
-			for (const collectionSlug in pluginOptions.collections) {
-				const collection = config.collections.find(
-					(collection) => collection.slug === collectionSlug,
-				)
-
-				if (collection) {
-					collection.fields.push({
-						name: 'addedByPlugin',
-						type: 'text',
-						admin: {
-							position: 'sidebar',
-						},
-					})
-				}
-			}
-		}
-
 		/**
 		 * If the plugin is disabled, we still want to keep added collections/fields so the database schema is consistent which is important for migrations.
 		 * If your plugin heavily modifies the database schema, you may want to remove this property.
@@ -180,43 +100,12 @@ export const socialScheduler =
 			config.admin.components.beforeDashboard = []
 		}
 
-		config.admin.components.beforeDashboard.push(
-			`social-scheduler/client#BeforeDashboardClient`,
-		)
-		config.admin.components.beforeDashboard.push(`social-scheduler/rsc#BeforeDashboardServer`)
-
-		config.endpoints.push({
-			handler: () => {
-				return Response.json({ message: 'Hello from custom endpoint' })
-			},
-			method: 'get',
-			path: '/my-plugin-endpoint',
-		})
-
 		const incomingOnInit = config.onInit
 
 		config.onInit = async (payload) => {
 			// Ensure we are executing any existing onInit functions before running our own.
 			if (incomingOnInit) {
 				await incomingOnInit(payload)
-			}
-
-			const { totalDocs } = await payload.count({
-				collection: 'plugin-collection',
-				where: {
-					id: {
-						equals: 'seeded-by-plugin',
-					},
-				},
-			})
-
-			if (totalDocs === 0) {
-				await payload.create({
-					collection: 'plugin-collection',
-					data: {
-						id: 'seeded-by-plugin',
-					},
-				})
 			}
 		}
 

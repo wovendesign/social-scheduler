@@ -2,6 +2,9 @@ import type { CollectionConfig } from 'payload'
 
 export const Accounts: CollectionConfig = {
 	slug: 'social-scheduler-accounts',
+	admin: {
+		hidden: true,
+	},
 	endpoints: [
 		{
 			handler: async (req) => {
