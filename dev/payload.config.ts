@@ -47,7 +47,7 @@ export default buildConfig({
 	editor: lexicalEditor(),
 	email: testEmailAdapter,
 	jobs: {
-		shouldAutoRun: true,
+		shouldAutoRun: () => true,
 		tasks: [],
 	},
 	onInit: async (payload) => {

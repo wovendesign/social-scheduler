@@ -57,9 +57,63 @@ export const socialScheduler =
 			],
 
 			// This is the function that is run when the task is invoked
-			handler: ({ input, job, req }) => {
-				req.payload.logger.info(`Running task: ${input?.id}`)
-				console.log('input', input)
+			handler: async ({ input, job, req }) => {
+				const { payload } = req
+
+				const id = input?.id
+				if (!id) {
+					throw new Error('Missing ID')
+				}
+
+				const post = await payload.findByID({
+					id,
+					collection: 'social-scheduler-posts',
+					depth: 2,
+					draft: true,
+				})
+				if (!post) {
+					throw new Error('Post not found')
+				}
+
+				const { accounts, content } = post
+
+				for (const account of accounts) {
+					if (account.platform === 'mastodon') {
+						payload.logger.info(
+							`Posting to Mastodon: ${account.instanceUrl} with content ${content}`,
+						)
+
+						const formData = new FormData()
+						formData.append('status', content)
+
+						await fetch(`https://${account.instanceUrl}/api/v1/statuses`, {
+							body: formData,
+							headers: {
+								Authorization: `Bearer ${account.access}`,
+							},
+							method: 'POST',
+						})
+							.then(async (res) => {
+								if (!res.ok) {
+									payload.logger.error(`Error: ${res.statusText}`)
+									const data = await res.json()
+									payload.logger.error(`Data: ${JSON.stringify(data)}`)
+									throw new Error('Error posting to Mastodon')
+								}
+								const data = await res.json()
+								payload.logger.info(`Data: ${JSON.stringify(data)}`)
+								return data
+							})
+							.catch((error) => {
+								payload.logger.error('Error posting to Mastodon', error)
+							})
+
+						continue
+					}
+
+					payload.logger.info('Unsupported account type')
+				}
+
 				return {
 					output: {
 						postID: 0,
@@ -70,7 +124,6 @@ export const socialScheduler =
 
 		// @ts-expect-error - This is a valid operation
 		config.jobs?.autoRun?.push({
-			// Every 5 minutes
 			cron: '* * * * *',
 			limit: 100, // limit jobs to process each run
 			queue: 'social-scheduler', // name of the queue

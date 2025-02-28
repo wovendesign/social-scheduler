@@ -13,8 +13,13 @@ export const Posts: CollectionConfig = {
 	endpoints: [
 		{
 			handler: async (req) => {
-				const id = req.query.id as string
 				const payload = req.payload
+
+				const id = req.routeParams?.id as string | undefined
+				if (!id) {
+					payload.logger.error('Missing ID')
+					return new Response('Missing ID', { status: 400 })
+				}
 				payload.logger.info('Adding job to queue')
 
 				// get date from request body
@@ -22,20 +27,23 @@ export const Posts: CollectionConfig = {
 					return new Response('Missing date in request body', { status: 400 })
 				}
 				const body = await req.json()
+				if (!body.date) {
+					return new Response('Missing date in request body', { status: 400 })
+				}
+				console.log(body.date)
 				const date = new Date(body.date)
 
-				payload.logger.info(`Date: ${date.toDateString()}`)
-
-				const nextMinute = new Date(Date.now() + 1000 * 5)
+				// Log date in german format
+				payload.logger.info(`Date: ${date.toLocaleString('de-DE')}`)
 
 				await payload.jobs
 					.queue({
 						input: {
-							id: 'IDDD',
+							id,
 						},
 						queue: 'social-scheduler',
 						task: 'createPost',
-						waitUntil: nextMinute,
+						waitUntil: date,
 					})
 					.then((job) => {
 						payload.logger.info('Job added to queue')
@@ -43,6 +51,7 @@ export const Posts: CollectionConfig = {
 					.catch((error) => {
 						payload.logger.error('Error adding job to queue', error)
 					})
+				await payload.jobs.run({ queue: 'social-scheduler' })
 				// await payload.jobs.run({ queue: 'social-scheduler' })
 				return new Response('Hello from custom endpoint')
 			},
@@ -52,8 +61,40 @@ export const Posts: CollectionConfig = {
 	],
 	fields: [
 		{
-			name: 'id',
+			name: 'title',
 			type: 'text',
+		},
+		{
+			name: 'content',
+			type: 'textarea',
+		},
+		{
+			name: 'date',
+			type: 'date',
+			admin: {
+				date: {
+					pickerAppearance: 'dayAndTime',
+					timeFormat: 'HH:mm',
+					timeIntervals: 5,
+				},
+				position: 'sidebar',
+			},
+			required: true,
+		},
+		{
+			type: 'collapsible',
+			fields: [
+				{
+					name: 'accounts',
+					type: 'relationship',
+					filterOptions: {
+						platform: { equals: 'mastodon' },
+					},
+					hasMany: true,
+					relationTo: 'social-scheduler-accounts',
+				},
+			],
+			label: 'Mastodon',
 		},
 	],
 	labels: {
