@@ -113,12 +113,16 @@ export const Accounts: CollectionConfig = {
 				const code = req.query.code as string
 				payload.logger.info(`Code: ${code}`)
 
-				const client_id = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID
+				const socialSchedulerSettings = await payload.findGlobal({
+					slug: 'social-scheduler-settings',
+				})
+
+				const client_id = socialSchedulerSettings?.instagram?.clientId
 				if (!client_id) {
 					throw new Error('Missing Instagram Client ID')
 				}
 
-				const client_secret = process.env.INSTAGRAM_CLIENT_SECRET
+				const client_secret = socialSchedulerSettings?.instagram?.clientSecret
 				if (!client_secret) {
 					throw new Error('Missing Instagram Client Secret')
 				}

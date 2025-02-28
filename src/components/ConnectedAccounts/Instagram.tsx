@@ -14,11 +14,6 @@ export const Instagram = async (props: ServerComponentProps) => {
 		},
 	})
 
-	// const upcomingJobs = payload.jobs.queue()
-
-	// payload.logger.info('Upcoming jobs:')
-	// payload.logger.info(upcomingJobs)
-
 	const accounts = await Promise.all(
 		docs.map(async (doc) => {
 			const searchParams = new URLSearchParams({
