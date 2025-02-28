@@ -35,7 +35,7 @@ export const Accounts: CollectionConfig = {
 				payload.logger.info(`Instance URL: ${instanceUrl}`)
 
 				const clientReq = await payload.find({
-					collection: 'mastodon-apps',
+					collection: 'social-scheduler-mastodon-apps',
 					where: {
 						instance: {
 							equals: instanceUrl.hostname,
@@ -106,7 +106,6 @@ export const Accounts: CollectionConfig = {
 		},
 		{
 			handler: async (req) => {
-				const id = req.query.id as string
 				const payload = req.payload
 
 				// http://localhost:3000/api/social-scheduler-accounts/instagram?code=AQDPxi1eb9zKnTqYE9XpaHcT6yOrl4Hm213zUN3a7OtvgcVNY03EHnjpl25ga1FgRjcGMsZB0INiYlVhCSIcaegWdouT72UayJv_mPImxgfN59UHDemVX1RvvKn5EFLPPkL4dFghhvQWAv6-GNMlTsijhrIjAvnE4FNuu2u1D00oASwpErnOQKVUACMB6vdRFsXr66fFj0TcbwQfXgrSLmGf0jZUTSvZTrt2C-j4lXCWYA#_

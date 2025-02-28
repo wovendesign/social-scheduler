@@ -35,7 +35,7 @@ export const MastodonApps: CollectionConfig = {
 
 				// Check, if a client already exists
 				const existingClient = await payload.find({
-					collection: 'mastodon-apps',
+					collection: 'social-scheduler-mastodon-apps',
 					where: {
 						instance: {
 							equals: instanceUrl.hostname,
@@ -82,7 +82,7 @@ export const MastodonApps: CollectionConfig = {
 
 				// Save the client
 				const createdClient = await payload.create({
-					collection: 'mastodon-apps',
+					collection: 'social-scheduler-mastodon-apps',
 					data: {
 						client_id: data.client_id,
 						client_secret: data.client_secret,

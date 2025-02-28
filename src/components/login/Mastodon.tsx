@@ -8,13 +8,18 @@ import { useState } from 'react'
 export const MastodonLogin = () => {
 	const [mastodonInstance, setMastodonInstance] = useState('')
 	const [loading, setLoading] = useState(false)
+	const [error, setError] = useState('')
 
 	async function performLogin() {
 		setLoading(true)
-		const response = await fetch(`/api/mastodon-apps/${mastodonInstance}/client`)
+		const response = await fetch(
+			`/api/social-scheduler-mastodon-apps/${mastodonInstance}/client`,
+		)
 
 		if (!response.ok) {
-			throw new Error(response.statusText)
+			setError(response.statusText)
+			setLoading(false)
+			return
 		}
 
 		const client = (await response.json()) as {
@@ -43,9 +48,11 @@ export const MastodonLogin = () => {
 						{loading ? 'Loading...' : 'Connect Mastodon'}
 					</Button>
 				}
+				Error={error}
 				label="Mastodon Instance"
 				onChange={(e: ChangeEvent<HTMLInputElement>) => setMastodonInstance(e.target.value)}
 				path="mastodon-instance"
+				showError={Boolean(error)}
 				value={mastodonInstance}
 			/>
 		</div>
