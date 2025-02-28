@@ -36,14 +36,18 @@ export const MastodonLogin = () => {
 	}
 
 	return (
-		<div>
+		<div style={{ marginTop: '2rem' }}>
 			<TextInput
+				AfterInput={
+					<Button onClick={performLogin}>
+						{loading ? 'Loading...' : 'Connect Mastodon'}
+					</Button>
+				}
 				label="Mastodon Instance"
 				onChange={(e: ChangeEvent<HTMLInputElement>) => setMastodonInstance(e.target.value)}
 				path="mastodon-instance"
 				value={mastodonInstance}
 			/>
-			<Button onClick={performLogin}>{loading ? 'Loading...' : 'Connect Mastodon'}</Button>
 		</div>
 	)
 }

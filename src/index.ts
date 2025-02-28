@@ -55,6 +55,15 @@ export const socialScheduler =
 							type: 'collapsible',
 							fields: [
 								{
+									name: 'connectedAccounts',
+									type: 'ui',
+									admin: {
+										components: {
+											Field: 'social-scheduler/rsc#Mastodon',
+										},
+									},
+								},
+								{
 									name: 'mastodon-login',
 									type: 'ui',
 									admin: {

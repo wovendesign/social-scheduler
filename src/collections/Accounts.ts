@@ -87,12 +87,19 @@ export const Accounts: CollectionConfig = {
 				await payload.create({
 					collection: 'social-scheduler-accounts',
 					data: {
-						access: data,
+						access: data?.access_token,
+						instanceUrl: instanceUrl.hostname,
 						platform: 'mastodon',
 					},
 				})
 
-				return new Response('Hello from custom endpoint')
+				// Redirect to the dashboard
+				const resp = new Response('Redirecting', { status: 302 })
+				resp.headers.set(
+					'Location',
+					'http://localhost:3000/admin/globals/social-scheduler-settings',
+				)
+				return resp
 			},
 			method: 'get',
 			path: '/mastodon/:instanceUrl',
@@ -185,12 +192,17 @@ export const Accounts: CollectionConfig = {
 		},
 		{
 			name: 'access',
-			type: 'json',
+			type: 'text',
 			admin: {
 				components: {
 					Field: 'social-scheduler/client#InstagramLogin',
 				},
 			},
+			unique: true,
+		},
+		{
+			name: 'instanceUrl',
+			type: 'text',
 		},
 	],
 }
