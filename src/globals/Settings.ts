@@ -24,6 +24,15 @@ export const settings: GlobalConfig = {
 					type: 'collapsible',
 					fields: [
 						{
+							name: 'connectedAccounts',
+							type: 'ui',
+							admin: {
+								components: {
+									Field: 'social-scheduler/rsc#Instagram',
+								},
+							},
+						},
+						{
 							name: 'instagram-login',
 							type: 'ui',
 							admin: {
