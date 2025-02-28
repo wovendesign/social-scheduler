@@ -4,6 +4,7 @@ import { runJobs } from 'node_modules/payload/dist/queues/operations/runJobs/ind
 
 import { Accounts } from './collections/Accounts.js'
 import { MastodonApps } from './collections/MastodonApps.js'
+import { settings } from './globals/Settings.js'
 
 export type SocialSchedulerConfig = {
 	/**
@@ -19,66 +20,6 @@ export const socialScheduler =
 		if (!config.collections) {
 			config.collections = []
 		}
-
-		const settings = {
-			slug: 'social-scheduler-settings',
-			admin: {
-				group: 'Social Scheduler',
-			},
-			fields: [
-				{
-					name: 'instagram',
-					type: 'group',
-					fields: [
-						{
-							name: 'clientId',
-							type: 'text',
-							label: 'Client ID',
-						},
-						{
-							name: 'clientSecret',
-							type: 'text',
-							label: 'Client Secret',
-						},
-						{
-							type: 'collapsible',
-							fields: [],
-							label: 'Connected Instagram Accounts',
-						},
-					],
-				},
-				{
-					name: 'mastodon',
-					type: 'group',
-					fields: [
-						{
-							type: 'collapsible',
-							fields: [
-								{
-									name: 'connectedAccounts',
-									type: 'ui',
-									admin: {
-										components: {
-											Field: 'social-scheduler/rsc#Mastodon',
-										},
-									},
-								},
-								{
-									name: 'mastodon-login',
-									type: 'ui',
-									admin: {
-										components: {
-											Field: 'social-scheduler/client#MastodonLogin',
-										},
-									},
-								},
-							],
-							label: 'Connected Mastodon Accounts',
-						},
-					],
-				},
-			],
-		} satisfies GlobalConfig
 
 		if (!config.globals) {
 			config.globals = [settings]

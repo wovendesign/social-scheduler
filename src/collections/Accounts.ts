@@ -109,26 +109,34 @@ export const Accounts: CollectionConfig = {
 				const id = req.query.id as string
 				const payload = req.payload
 
-				// http://localhost:3000/api/social-scheduler-accounts/instagram?code=AQAJY3kmqtQnCm0tgWX_lvvvssTBXmzJo0fHsuu-CIEoVfkuwe6NTOWIDz77DaYUwCr6Wd0NRPNjeVuvSCgLqNONtREde-gvfnU6gW_85VBgpToPYHN4d3q89meNwh50IhUBs9r0SLBOTr0NikfjqdFmhoVUOYZo9UquYAfNkWyFtUGZsxXmlVuF6ceoI8MMo3Vf7Il5NDo9qxgo9CoVcq4wCaG4VbVI5HWHnJ9pAJz3eA#_
+				// http://localhost:3000/api/social-scheduler-accounts/instagram?code=AQDPxi1eb9zKnTqYE9XpaHcT6yOrl4Hm213zUN3a7OtvgcVNY03EHnjpl25ga1FgRjcGMsZB0INiYlVhCSIcaegWdouT72UayJv_mPImxgfN59UHDemVX1RvvKn5EFLPPkL4dFghhvQWAv6-GNMlTsijhrIjAvnE4FNuu2u1D00oASwpErnOQKVUACMB6vdRFsXr66fFj0TcbwQfXgrSLmGf0jZUTSvZTrt2C-j4lXCWYA#_
 				const code = req.query.code as string
 				payload.logger.info(`Code: ${code}`)
 
-				// Exchange Code for a Token
-
-				// curl -X POST https://api.instagram.com/oauth/access_token \
-				// -F 'client_id=990602627938098' \
-				// -F 'client_secret=a1b2C3D4' \
-				// -F 'grant_type=authorization_code' \
-				// -F 'redirect_uri=https://my.m.redirect.net/' \
-				// -F 'code=AQBx-hBsH3...'
-
-				const client_id = process.env.INSTAGRAM_CLIENT_ID
+				const client_id = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID
 				if (!client_id) {
 					throw new Error('Missing Instagram Client ID')
 				}
-				const short_token = await fetch(
-					`https://api.instagram.com/oauth/access_token?client_id=${client_id}&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&grant_type=authorization_code&redirect_uri=https://localhost:3000/api/social-scheduler-accounts/instagram`,
+
+				const client_secret = process.env.INSTAGRAM_CLIENT_SECRET
+				if (!client_secret) {
+					throw new Error('Missing Instagram Client Secret')
+				}
+
+				const formData = new FormData()
+				formData.append('client_id', client_id)
+				formData.append('client_secret', client_secret)
+				formData.append('grant_type', 'authorization_code')
+				formData.append(
+					'redirect_uri',
+					'https://localhost:3000/api/social-scheduler-accounts/instagram',
 				)
+				formData.append('code', code)
+
+				const short_token = await fetch(`https://api.instagram.com/oauth/access_token`, {
+					body: formData,
+					method: 'POST',
+				})
 
 				if (!short_token.ok) {
 					payload.logger.error(`Error: ${short_token.statusText}`)
@@ -136,31 +144,21 @@ export const Accounts: CollectionConfig = {
 				}
 
 				const shortTokenData = (await short_token.json()) as {
-					data: {
-						access_token: string
-						permissions: string
-						user_id: string
-					}[]
+					access_token: string
+					permissions: string
+					user_id: string
 				}
 				payload.logger.info(`Short Token Data: ${JSON.stringify(shortTokenData)}`)
 
 				// Convert Short-Lived Access Token to Long-Lived Access Token
-				// curl -i -X GET "https://graph.instagram.com/access_token
-				// ?grant_type=ig_exchange_token
-				// &client_secret=a1b2C3D4
-				// &access_token=EAACEdEose0..."
-
-				const client_secret = process.env.INSTAGRAM_CLIENT_SECRET
-				if (!client_secret) {
-					throw new Error('Missing Instagram Client Secret')
-				}
 
 				const response = await fetch(
-					`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${client_secret}&access_token=${code}`,
+					`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${client_secret}&access_token=${shortTokenData.access_token}`,
 				)
 
 				if (!response.ok) {
 					payload.logger.error(`Error: ${response.statusText}`)
+					payload.logger.error(`Data: ${JSON.stringify(await response.text())}`)
 					return new Response('Error', { status: response.status })
 				}
 
@@ -169,7 +167,21 @@ export const Accounts: CollectionConfig = {
 				const accessToken = data.access_token
 				payload.logger.info(`Access Token: ${accessToken}`)
 
-				return new Response('Hello from custom endpoint')
+				await payload.create({
+					collection: 'social-scheduler-accounts',
+					data: {
+						access: data?.access_token,
+						platform: 'instagram',
+					},
+				})
+
+				// Redirect to the dashboard
+				const resp = new Response('Redirecting', { status: 302 })
+				resp.headers.set(
+					'Location',
+					'http://localhost:3000/admin/globals/social-scheduler-settings',
+				)
+				return resp
 			},
 			method: 'get',
 			path: '/instagram',

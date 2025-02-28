@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 export const MastodonApps: CollectionConfig = {
-	slug: 'mastodon-apps',
+	slug: 'social-scheduler-mastodon-apps',
 	admin: {
 		hidden: true,
 	},
