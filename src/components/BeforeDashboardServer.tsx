@@ -7,6 +7,11 @@ export const BeforeDashboardServer = async (props: ServerComponentProps) => {
 
   const { docs } = await payload.find({ collection: 'plugin-collection' })
 
+  // const upcomingJobs = payload.jobs.queue()
+
+  // payload.logger.info('Upcoming jobs:')
+  // payload.logger.info(upcomingJobs)
+
   return (
     <div className={styles.wrapper}>
       <h1>Added by the plugin: Before Dashboard Server</h1>

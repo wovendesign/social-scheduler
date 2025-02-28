@@ -1,9 +1,9 @@
-import { mongooseAdapter } from '@payloadcms/db-mongodb'
+import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
-import { buildConfig } from 'payload'
-import { socialScheduler } from 'social-scheduler'
+import { buildConfig, TaskConfig } from 'payload'
 import sharp from 'sharp'
+import { socialScheduler } from 'social-scheduler'
 import { fileURLToPath } from 'url'
 
 import { devUser } from './helpers/credentials.js'
@@ -37,11 +37,19 @@ export default buildConfig({
       },
     },
   ],
-  db: mongooseAdapter({
-    url: process.env.DATABASE_URI || '',
+  db: postgresAdapter({
+    // Postgres-specific arguments go here.
+    // `pool` is required.
+    pool: {
+      connectionString: process.env.DATABASE_URI,
+    },
   }),
   editor: lexicalEditor(),
   email: testEmailAdapter,
+  jobs: {
+    shouldAutoRun: true,
+    tasks: [],
+  },
   onInit: async (payload) => {
     await seed(payload)
   },
