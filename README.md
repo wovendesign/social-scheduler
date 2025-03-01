@@ -5,7 +5,7 @@ This Payload CMS Plugin gives you the power to connect different social-media ac
 ## Supported Platforms
 
 - [ ] Instagram
-- [ ] Mastodon
+- [x] Mastodon
 - [ ] YouTube (Not yet started)
 - [ ] TikTok (Not yet started)
 - [ ] BlueSky (Not yet started)
