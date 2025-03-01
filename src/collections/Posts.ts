@@ -90,6 +90,11 @@ export const Posts: CollectionConfig = {
 				{
 					name: 'accounts',
 					type: 'relationship',
+					admin: {
+						components: {
+							Field: 'social-scheduler/client#SelectMastodonAccount',
+						},
+					},
 					filterOptions: {
 						platform: { equals: 'mastodon' },
 					},

@@ -10,6 +10,58 @@ export const Accounts: CollectionConfig = {
 			handler: async (req) => {
 				const payload = req.payload
 
+				const platform = req.routeParams?.platform as string | undefined
+				if (!platform) {
+					return new Response('Missing platform', { status: 400 })
+				}
+
+				if (platform === 'instagram') {
+					return new Response(JSON.stringify([]), { status: 200 })
+				} else if (platform === 'mastodon') {
+					const { docs } = await payload.find({
+						collection: 'social-scheduler-accounts',
+						where: {
+							platform: {
+								equals: 'mastodon',
+							},
+						},
+					})
+
+					const accounts = await Promise.all(
+						docs.map(async (doc) => {
+							const userReq = await fetch(
+								`https://${doc.instanceUrl}/api/v1/accounts/verify_credentials`,
+								{
+									headers: {
+										Authorization: `Bearer ${doc.access}`,
+									},
+								},
+							)
+							const user = (await userReq.json()) as {
+								avatar: string
+								display_name: string
+							}
+
+							return {
+								id: doc.id,
+								instanceUrl: doc.instanceUrl,
+								user,
+							}
+						}),
+					)
+
+					return new Response(JSON.stringify(accounts), { status: 200 })
+				}
+
+				return new Response('Invalid platform', { status: 400 })
+			},
+			method: 'get',
+			path: '/getAccounts/:platform',
+		},
+		{
+			handler: async (req) => {
+				const payload = req.payload
+
 				const code = req.query.code as string
 				payload.logger.info(`Code: ${code}`)
 
