@@ -124,7 +124,7 @@ export const socialScheduler =
 
 		// @ts-expect-error - This is a valid operation
 		config.jobs?.autoRun?.push({
-			cron: '* * * * *',
+			cron: '*/1 * * * *',
 			limit: 100, // limit jobs to process each run
 			queue: 'social-scheduler', // name of the queue
 		})

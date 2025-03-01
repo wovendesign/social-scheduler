@@ -43,11 +43,7 @@ export const MastodonLogin = () => {
 	return (
 		<div style={{ marginTop: '2rem' }}>
 			<TextInput
-				AfterInput={
-					<Button onClick={performLogin}>
-						{loading ? 'Loading...' : 'Connect Mastodon'}
-					</Button>
-				}
+				AfterInput={<Button>{loading ? 'Loading...' : 'Connect Mastodon'}</Button>}
 				Error={error}
 				label="Mastodon Instance"
 				onChange={(e: ChangeEvent<HTMLInputElement>) => setMastodonInstance(e.target.value)}

@@ -1,3 +1,5 @@
+import type { PayloadRequest } from 'payload'
+
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
@@ -27,7 +29,20 @@ export default buildConfig({
 	collections: [
 		{
 			slug: 'posts',
-			fields: [],
+			fields: [
+				{
+					name: 'title',
+					type: 'text',
+					label: 'Title',
+					required: true,
+				},
+			],
+			versions: {
+				drafts: {
+					schedulePublish: true,
+				},
+				maxPerDoc: 50,
+			},
 		},
 		{
 			slug: 'media',
@@ -47,6 +62,13 @@ export default buildConfig({
 	editor: lexicalEditor(),
 	email: testEmailAdapter,
 	jobs: {
+		autoRun: [
+			{
+				cron: '*/1 * * * *',
+				limit: 10,
+				queue: 'default',
+			},
+		],
 		shouldAutoRun: () => true,
 		tasks: [],
 	},
