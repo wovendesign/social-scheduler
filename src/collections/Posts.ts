@@ -61,17 +61,17 @@ export const Posts: CollectionConfig = {
 	],
 	fields: [
 		{
-			name: 'title',
-			type: 'text',
-		},
-		{
 			name: 'content',
 			type: 'textarea',
+			admin: {
+				condition: (data) => data._status === 'draft',
+			},
 		},
 		{
 			name: 'date',
 			type: 'date',
 			admin: {
+				condition: (data) => data._status === 'draft',
 				date: {
 					pickerAppearance: 'dayAndTime',
 					timeFormat: 'HH:mm',
@@ -83,6 +83,9 @@ export const Posts: CollectionConfig = {
 		},
 		{
 			type: 'collapsible',
+			admin: {
+				condition: (data) => data._status === 'draft',
+			},
 			fields: [
 				{
 					name: 'accounts',
@@ -95,6 +98,28 @@ export const Posts: CollectionConfig = {
 				},
 			],
 			label: 'Mastodon',
+		},
+		{
+			name: 'scheduled',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: 'social-scheduler/rsc#ScheduledView',
+				},
+				condition: (data) =>
+					data._status === 'published' && data.date && new Date(data.date) > new Date(),
+			},
+		},
+		{
+			name: 'posted',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: 'social-scheduler/rsc#PostedView',
+				},
+				condition: (data) =>
+					data._status === 'published' && data.date && new Date(data.date) <= new Date(),
+			},
 		},
 	],
 	labels: {

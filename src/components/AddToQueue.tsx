@@ -1,11 +1,12 @@
 'use client'
 import type { ClientComponentProps } from 'payload'
 
-import { Button, useAllFormFields, useDocumentInfo } from '@payloadcms/ui'
+import { Button, toast, useAllFormFields, useDocumentInfo, useForm } from '@payloadcms/ui'
 import { reduceFieldsToValues } from 'payload/shared'
 
 export function ScheduleButton(props: ClientComponentProps) {
 	const { id, versionCount } = useDocumentInfo()
+	const { submit } = useForm()
 
 	const [fields] = useAllFormFields()
 	const formData = reduceFieldsToValues(fields, true)
@@ -14,13 +15,26 @@ export function ScheduleButton(props: ClientComponentProps) {
 	if (versionCount > 0) {
 		return (
 			<Button
-				onClick={async () => {
-					await fetch(`/api/social-scheduler-posts/${id}/schedule`, {
-						body: JSON.stringify({
-							date,
+				onClick={() => {
+					toast.promise(
+						fetch(`/api/social-scheduler-posts/${id}/schedule`, {
+							body: JSON.stringify({
+								date,
+							}),
+							method: 'POST',
+						}).then(() => {
+							void submit({
+								overrides: {
+									_status: 'published',
+								},
+							})
 						}),
-						method: 'POST',
-					})
+						{
+							error: 'Failed to schedule',
+							loading: 'Scheduling...',
+							success: 'Scheduled',
+						},
+					)
 				}}
 			>
 				Publish Newsletter?

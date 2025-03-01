@@ -1,9 +1,8 @@
-import type { CollectionSlug, Config, GlobalConfig, TaskConfig, WorkflowConfig } from 'payload'
-
-import { runJobs } from 'node_modules/payload/dist/queues/operations/runJobs/index.js'
+import type { CollectionSlug, Config, TaskConfig } from 'payload'
 
 import { Accounts } from './collections/Accounts.js'
-import { MastodonApps } from './collections/MastodonApps.js'
+import { MastodonApps } from './collections/Mastodon/Apps.js'
+import { MastodonPublishedPosts } from './collections/Mastodon/PublishedPosts.js'
 import { Posts } from './collections/Posts.js'
 import { settings } from './globals/Settings.js'
 
@@ -28,7 +27,13 @@ export const socialScheduler =
 			config.globals.push(settings)
 		}
 
-		config.collections = [...config.collections, MastodonApps, Accounts, Posts]
+		config.collections = [
+			...config.collections,
+			MastodonApps,
+			Accounts,
+			Posts,
+			MastodonPublishedPosts,
+		]
 
 		config.jobs?.tasks.push({
 			// Configure this task to automatically retry
@@ -57,7 +62,7 @@ export const socialScheduler =
 			],
 
 			// This is the function that is run when the task is invoked
-			handler: async ({ input, job, req }) => {
+			handler: async ({ input, req }) => {
 				const { payload } = req
 
 				const id = input?.id
@@ -102,10 +107,30 @@ export const socialScheduler =
 								}
 								const data = await res.json()
 								payload.logger.info(`Data: ${JSON.stringify(data)}`)
+
+								payload.logger.info(`Saving published post with ID: ${id}`)
+
+								await payload
+									.create({
+										collection: 'social-scheduler-mastodon-published-posts',
+										data: {
+											account: account.id,
+											mastodonId: data.id,
+											mastodonUrl: data.url,
+											post: parseInt(id),
+											publishedAt: data.created_at,
+										},
+									})
+									.catch((error) => {
+										payload.logger.error(
+											`Error saving published post: ${JSON.stringify(error)}`,
+										)
+									})
+
 								return data
 							})
 							.catch((error) => {
-								payload.logger.error('Error posting to Mastodon', error)
+								payload.logger.error(`Error posting to Mastodon ${error}`)
 							})
 
 						continue
