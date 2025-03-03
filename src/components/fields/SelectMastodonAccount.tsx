@@ -12,20 +12,7 @@ export const SelectMastodonAccount: RelationshipFieldClientComponent = (props) =
 		{ initialParams: { depth: 1 } },
 	)
 
-	const [selected, setSelected] = React.useState<string[]>([])
-
 	const { setValue, value } = useField({ path: props.path })
-	useEffect(() => {
-		setValue(selected)
-	}, [selected, setValue])
-
-	useEffect(() => {
-		if (value) {
-			if (Array.isArray(value)) {
-				setSelected(value)
-			}
-		}
-	}, [value])
 
 	return (
 		<div>
@@ -49,13 +36,22 @@ export const SelectMastodonAccount: RelationshipFieldClientComponent = (props) =
 								key={account.id}
 							>
 								<CheckboxInput
-									checked={selected.includes(account.id)}
+									checked={Array.isArray(value) && value.includes(account.id)}
 									id={`select-account-${account.id}`}
 									onToggle={(e) => {
 										if (e.target.checked) {
-											setSelected([...selected, account.id])
+											// setSelected([...selected, account.id])
+											setValue([
+												...((Array.isArray(value) && value) || []),
+												account.id,
+											])
 										} else {
-											setSelected(selected.filter((id) => id !== account.id))
+											// setSelected(selected.filter((id) => id !== account.id))
+											setValue(
+												((Array.isArray(value) && value) || []).filter(
+													(id) => id !== account.id,
+												),
+											)
 										}
 									}}
 								/>
