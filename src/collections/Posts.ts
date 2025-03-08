@@ -68,6 +68,17 @@ export const Posts: CollectionConfig = {
 			},
 		},
 		{
+			name: 'media',
+			type: 'array',
+			fields: [
+				{
+					name: 'image',
+					type: 'upload',
+					relationTo: 'social-scheduler-images',
+				},
+			],
+		},
+		{
 			name: 'date',
 			type: 'date',
 			admin: {
@@ -80,6 +91,29 @@ export const Posts: CollectionConfig = {
 				position: 'sidebar',
 			},
 			required: true,
+		},
+		{
+			type: 'collapsible',
+			admin: {
+				condition: (data) => data._status === 'draft',
+			},
+			fields: [
+				{
+					name: 'instagram-accounts',
+					type: 'relationship',
+					admin: {
+						components: {
+							Field: 'social-scheduler/client#SelectInstagramAccount',
+						},
+					},
+					filterOptions: {
+						platform: { equals: 'instagram' },
+					},
+					hasMany: true,
+					relationTo: 'social-scheduler-accounts',
+				},
+			],
+			label: 'Instagram',
 		},
 		{
 			type: 'collapsible',

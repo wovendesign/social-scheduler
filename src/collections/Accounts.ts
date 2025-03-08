@@ -1,5 +1,22 @@
 import type { CollectionConfig } from 'payload'
 
+export type MastodonAccount = {
+	id: string
+	instanceUrl: string
+	user: {
+		avatar: string
+		display_name: string
+	}
+}
+
+export type InstagramAccount = {
+	id: string
+	user: {
+		profile_picture_url?: string
+		username: string
+	}
+}
+
 export const Accounts: CollectionConfig = {
 	slug: 'social-scheduler-accounts',
 	admin: {
@@ -16,7 +33,35 @@ export const Accounts: CollectionConfig = {
 				}
 
 				if (platform === 'instagram') {
-					return new Response(JSON.stringify([]), { status: 200 })
+					const { docs } = await payload.find({
+						collection: 'social-scheduler-accounts',
+						where: {
+							platform: {
+								equals: 'instagram',
+							},
+						},
+					})
+
+					const accounts = await Promise.all(
+						docs.map(async (doc) => {
+							const searchParams = new URLSearchParams({
+								access_token: doc.access,
+								fields: 'username,profile_picture_url',
+							})
+
+							const userReq = await fetch(
+								`https://graph.instagram.com/v22.0/me?${searchParams.toString()}`,
+							)
+							const user = (await userReq.json()) as InstagramAccount['user']
+
+							return {
+								id: doc.id,
+								user,
+							}
+						}),
+					)
+
+					return new Response(JSON.stringify(accounts), { status: 200 })
 				} else if (platform === 'mastodon') {
 					const { docs } = await payload.find({
 						collection: 'social-scheduler-accounts',
@@ -37,10 +82,7 @@ export const Accounts: CollectionConfig = {
 									},
 								},
 							)
-							const user = (await userReq.json()) as {
-								avatar: string
-								display_name: string
-							}
+							const user = (await userReq.json()) as MastodonAccount['user']
 
 							return {
 								id: doc.id,

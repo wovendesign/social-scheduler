@@ -1,6 +1,7 @@
 import type { CollectionSlug, Config, TaskConfig } from 'payload'
 
 import { Accounts } from './collections/Accounts.js'
+import { Images } from './collections/Images.js'
 import { MastodonApps } from './collections/Mastodon/Apps.js'
 import { MastodonPublishedPosts } from './collections/Mastodon/PublishedPosts.js'
 import { Posts } from './collections/Posts.js'
@@ -33,6 +34,7 @@ export const socialScheduler =
 			Accounts,
 			Posts,
 			MastodonPublishedPosts,
+			Images,
 		]
 
 		config.jobs?.tasks.push({

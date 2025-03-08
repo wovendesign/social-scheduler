@@ -42,5 +42,5 @@ export function ScheduleButton(props: ClientComponentProps) {
 		)
 	}
 
-	return <>Safe first to publish</>
+	return <>Save first to publish</>
 }
